@@ -1,0 +1,3 @@
+rootProject.name='MG2D'
+include ':demo'
+include ':mg2d'

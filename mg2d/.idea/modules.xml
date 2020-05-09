@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/MG2D.iml" filepath="$PROJECT_DIR$/MG2D.iml" group="MapsEdition/MG2D" />
+      <module fileurl="file://$PROJECT_DIR$/../MapsEdition.iml" filepath="$PROJECT_DIR$/../MapsEdition.iml" group="MapsEdition" />
+      <module fileurl="file://$PROJECT_DIR$/../app/app.iml" filepath="$PROJECT_DIR$/../app/app.iml" group="MapsEdition/app" />
+    </modules>
+  </component>
+</project>
