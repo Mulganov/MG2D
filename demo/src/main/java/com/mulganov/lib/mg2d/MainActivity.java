@@ -1,18 +1,19 @@
 package com.mulganov.lib.mg2d;
 
 import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.view.View;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
-import com.mulganov.job.lib.mg2d.MG2D;
-import com.mulganov.job.lib.mg2d.graph.Graph;
-import com.mulganov.job.lib.mg2d.graph.image.Image;
-import com.mulganov.job.lib.mg2d.graph.image.mg2dMatrix;
-import com.mulganov.job.lib.mg2d.scena.Scena;
-import com.mulganov.job.lib.mg2d.setting.Border;
+import com.mulganov.lib.mg2d.control.ControlManager;
+import com.mulganov.lib.mg2d.graph.figure.Circle;
+import com.mulganov.lib.mg2d.graph.template.Joystick;
+import com.mulganov.lib.mg2d.scena.Scena;
+import com.mulganov.lib.mg2d.setting.Border;
+import com.mulganov.lib.mg2d.camera.Camera;
 
 
 public class MainActivity extends AppCompatActivity {
@@ -20,9 +21,10 @@ public class MainActivity extends AppCompatActivity {
     ConstraintLayout mContentView;
     public static MG2D mg2d;
 
+    private Camera camera;
+    private Joystick joystick;
 
     private Scena s1;
-    private Scena s2;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -33,25 +35,28 @@ public class MainActivity extends AppCompatActivity {
 
         hide();
 
+        init();
+
+    }
+
+    private void init() {
         Assets.init(this);
 
-
+//        mg2d = MG2D.getMG2D(this);
         mg2d = new MG2D(this);
         mg2d.getSetting().setSize(new Scena.Size(Scena.Size.Format.FORMAT_16X9, this));
         Border border = mg2d.getSetting().getBorder();
-        border.setColor(Color.RED);
-        border.setStatus(true);
+        border.setStatus(false);
 
-        mg2d.getSetting().setBackground(Color.YELLOW);
+        mg2d.getSetting().setBackground(Color.argb(255, 243, 192, 128));
+
+        camera = Camera.getCamera(true);
 
         createS1();
-        createS2();
-
 
         mg2d.setScena(s1);
 
         addContentView(mg2d.getView(), mContentView.getLayoutParams());
-
     }
 
     private void createS1() {
@@ -59,38 +64,48 @@ public class MainActivity extends AppCompatActivity {
 
         Scena.Size size = s1.getSize();
 
-        final Image image = new Image("auto", Assets.getBitmap("0.png"), new mg2dMatrix(size.getX(), size.getY(), mg2dMatrix.Flag.WIDTH, size.getW()/2));
+        Circle circle = new Circle("Joystick_circle", size.getW()/2, size.getH() - size.getH()/2, size.getH()/10, new Paint());
+        joystick = new Joystick("Joystick", circle);
+        joystick.setDrawB(false);
+        joystick.setActivityRange(Joystick.ACTIVITY_RANGE_MAX);
 
-        image.setClick(new Graph.Click() {
+        joystick.setJoystickEvent(new Joystick.JoystickEvent() {
             @Override
-            public void onClick(Graph.Click.Event event) {
-                if (!image.isClickRecTemplate(event)) return;
-
-                mg2d.setScena(s2);
+            public void Event(float x, float y, long delta) {
+//                System.out.println(x + " " + y);
+                camera.setRx(x);
+                camera.setRy(y);
             }
         });
 
-
-        s1.add(image);
-
-    }
-
-    private void createS2() {
-        s2= new Scena(this, mg2d);
-
-        final Image image = new Image("auto", Assets.getBitmap("1.png"), new mg2dMatrix(1000, 1, 1000));
-
-        image.setClick(new Graph.Click() {
+        MG2D.getMG2D().getSetting().getControlManager().getRegister().addClickDownWindow(new ControlManager.ClickEvent() {
             @Override
-            public void onClick(Event event) {
-                if (!image.isClickRecTemplate(event)) return;
+            public void Event(ControlManager.ClickEvent.Info clickInfo) {
+                if ( clickInfo.getX() >= MG2D.getMG2D().getSetting().getSize().getX() + MG2D.getMG2D().getSetting().getSize().getW()/2 ) return;
+                joystick.setDrawB(true);
+                joystick.setX((int) clickInfo.getX());
+                joystick.setY((int) clickInfo.getY());
 
-                mg2d.setScena(s1);
+                camera.setRx(0);
+                camera.setRy(0);
             }
         });
 
-        s2.add(image);
+        MG2D.getMG2D().getSetting().getControlManager().getRegister().addClickUpWindow(new ControlManager.ClickEvent() {
+            @Override
+            public void Event(ControlManager.ClickEvent.Info clickInfo) {
+                joystick.setDrawB(false);
+
+                camera.setRx(0);
+                camera.setRy(0);
+            }
+        });
+
+        s1.add(camera);
+        s1.add(joystick);
+
     }
+
 
     public void hide(){
         mContentView.setSystemUiVisibility(View.SYSTEM_UI_FLAG_LOW_PROFILE
